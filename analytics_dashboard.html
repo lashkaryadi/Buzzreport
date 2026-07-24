@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MerchantPulse — Magicpin Analytics Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0a0d14;
+  --bg2:#101622;
+  --bg3:#151d2e;
+  --bg4:#1a2540;
+  --border:#1e2a3e;
+  --border2:#2a3a54;
+  --text:#e8ecf4;
+  --text2:#94a3b8;
+  --text3:#64748b;
+  --accent:#3b82f6;
+  --accent2:#60a5fa;
+  --accent-soft:rgba(59,130,246,0.12);
+  --green:#22c55e;
+  --green-soft:rgba(34,197,94,0.12);
+  --amber:#f59e0b;
+  --amber-soft:rgba(245,158,11,0.12);
+  --rose:#ef4444;
+  --rose-soft:rgba(239,68,68,0.12);
+  --purple:#a855f7;
+  --purple-soft:rgba(168,85,247,0.12);
+  --teal:#14b8a6;
+  --teal-soft:rgba(20,184,166,0.12);
+  --r:12px;
+  --font-d:'Space Grotesk',system-ui,sans-serif;
+  --font-b:'Inter',system-ui,sans-serif;
+  --font-m:'JetBrains Mono','Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);line-height:1.6;min-height:100vh;}
+::selection{background:var(--accent-soft);color:var(--text);}
+h1,h2,h3,h4{font-family:var(--font-d);font-weight:600;letter-spacing:-0.02em;}
+code,.mono{font-family:var(--font-m);}
+a{color:var(--accent2);text-decoration:none;}
+
+.app{display:flex;min-height:100vh;}
+
+/* Sidebar */
+.sidebar{
+  width:240px;flex:0 0 240px;background:var(--bg2);border-right:1px solid var(--border);
+  padding:20px 14px;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;
+}
+.logo{padding:8px 10px 20px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.logo .badge{
+  font-family:var(--font-m);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--accent);background:var(--accent-soft);padding:3px 8px;border-radius:20px;
+  display:inline-block;margin-bottom:8px;
+}
+.logo h1{font-size:18px;line-height:1.3;}
+.logo h1 span{color:var(--accent2);}
+.logo .sub{font-size:11.5px;color:var(--text3);margin-top:4px;}
+
+.nav-item{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;
+  color:var(--text2);font-family:var(--font-b);font-size:13px;font-weight:500;padding:9px 10px;
+  border-radius:8px;cursor:pointer;margin-bottom:2px;transition:all .15s;
+}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:var(--accent-soft);color:var(--accent2);}
+.nav-item .icon{width:18px;text-align:center;font-size:14px;}
+.nav-sep{height:1px;background:var(--border);margin:10px 4px;}
+
+.sidebar-footer{
+  margin-top:auto;padding-top:14px;border-top:1px solid var(--border);
+  font-size:10.5px;color:var(--text3);line-height:1.7;position:absolute;bottom:14px;left:14px;right:14px;
+}
+
+/* Main */
+.main{flex:1;margin-left:240px;padding:24px 32px 60px;}
+
+/* Header */
+.header{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;
+  margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);
+}
+.header h2{font-size:22px;}
+.header h2 span{color:var(--text2);font-weight:400;font-size:14px;margin-left:8px;}
+.filters{display:flex;gap:10px;flex-wrap:wrap;}
+.filter-select{
+  background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;font-family:var(--font-b);font-size:12.5px;cursor:pointer;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;
+}
+.filter-select:focus{outline:none;border-color:var(--accent);}
+
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.kpi{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;
+  position:relative;overflow:hidden;
+}
+.kpi::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+}
+.kpi:nth-child(1)::before{background:var(--accent);}
+.kpi:nth-child(2)::before{background:var(--green);}
+.kpi:nth-child(3)::before{background:var(--amber);}
+.kpi:nth-child(4)::before{background:var(--purple);}
+.kpi .label{font-size:11.5px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;}
+.kpi .value{font-family:var(--font-d);font-size:28px;font-weight:700;margin:6px 0 4px;}
+.kpi:nth-child(1) .value{color:var(--accent2);}
+.kpi:nth-child(2) .value{color:var(--green);}
+.kpi:nth-child(3) .value{color:var(--amber);}
+.kpi:nth-child(4) .value{color:var(--purple);}
+.kpi .change{font-size:11.5px;font-weight:600;}
+.kpi .change.up{color:var(--green);}
+.kpi .change.down{color:var(--rose);}
+
+/* Chart Sections */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.chart-full{margin-bottom:16px;}
+.chart-box{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;
+}
+.chart-box .chart-header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;
+}
+.chart-box h3{font-size:15px;color:var(--text);}
+.chart-box h3 small{font-weight:400;color:var(--text3);font-size:11.5px;margin-left:6px;}
+.sql-toggle{
+  font-family:var(--font-m);font-size:10.5px;color:var(--accent2);background:var(--accent-soft);
+  border:none;padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .15s;
+}
+.sql-toggle:hover{background:var(--accent);color:#fff;}
+.sql-block{
+  display:none;background:#080c14;border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px;margin-top:12px;overflow-x:auto;animation:fadeIn .2s;
+}
+.sql-block.show{display:block;}
+.sql-block pre{margin:0;white-space:pre-wrap;word-break:break-word;}
+.sql-block code{font-size:11.5px;color:#93c5fd;line-height:1.7;}
+.sql-block .kw{color:#c084fc;}
+.sql-block .fn{color:#fbbf24;}
+.sql-block .str{color:#86efac;}
+.sql-block .comment{color:#475569;font-style:italic;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+
+/* Canvas */
+.chart-canvas{position:relative;width:100%;max-height:320px;}
+
+/* Table */
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.data-table th{
+  text-align:left;padding:10px 12px;color:var(--text3);font-weight:600;font-size:10.5px;
+  text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border);
+  cursor:pointer;user-select:none;
+}
+.data-table th:hover{color:var(--text2);}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2);}
+.data-table td.hl{color:var(--text);font-weight:600;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:var(--bg3);}
+.rank-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;font-size:10px;font-weight:700;
+}
+.rank-1{background:var(--amber-soft);color:var(--amber);}
+.rank-2{background:var(--accent-soft);color:var(--accent2);}
+.rank-3{background:var(--green-soft);color:var(--green);}
+.rank-other{background:var(--bg3);color:var(--text3);}
+
+/* Cohort Heatmap */
+.cohort-grid{display:grid;gap:2px;font-size:10.5px;}
+.cohort-cell{
+  display:flex;align-items:center;justify-content:center;
+  padding:6px 4px;border-radius:4px;font-family:var(--font-m);font-weight:500;
+  min-width:52px;min-height:32px;
+}
+.cohort-header{color:var(--text3);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;}
+
+/* Funnel */
+.funnel{display:flex;flex-direction:column;align-items:center;gap:0;padding:16px 0;}
+.funnel-step{
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  border-radius:10px;padding:16px 24px;text-align:center;transition:all .2s;position:relative;
+  min-height:52px;
+}
+.funnel-step:hover{transform:scale(1.015);box-shadow:0 4px 20px rgba(0,0,0,0.25);}
+.funnel-step .f-left{text-align:left;}
+.funnel-step .f-label{font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;}
+.funnel-step .f-val{
+  font-family:var(--font-d);font-size:24px;font-weight:700;
+  padding:0 20px;min-width:80px;
+}
+.funnel-step .f-right{text-align:right;display:flex;flex-direction:column;gap:2px;align-items:flex-end;}
+.funnel-step .f-pct{font-size:11px;font-family:var(--font-m);white-space:nowrap;}
+.funnel-step .f-drop{font-size:10px;font-family:var(--font-m);color:var(--rose);white-space:nowrap;}
+.funnel-connector{
+  display:flex;align-items:center;justify-content:center;
+  height:20px;position:relative;
+}
+.funnel-connector::before{
+  content:'';width:2px;height:100%;
+  background:linear-gradient(to bottom,var(--text3),transparent);
+}
+
+/* Heatmap grid */
+.heatmap-grid{display:grid;grid-template-columns:60px repeat(24,1fr);gap:2px;font-size:9.5px;}
+.heatmap-cell{
+  display:flex;align-items:center;justify-content:center;
+  padding:5px 2px;border-radius:3px;font-family:var(--font-m);font-weight:500;
+}
+.heatmap-label{
+  display:flex;align-items:center;font-size:10.5px;color:var(--text3);font-weight:600;padding-right:4px;
+}
+
+/* Responsive */
+@media(max-width:1100px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .chart-row{grid-template-columns:1fr;}
+}
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .main{margin-left:0;}
+  .kpi-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="badge">Analytics Dashboard</div>
+    <h1>Merchant<span>Pulse</span></h1>
+    <div class="sub">Magicpin Hyperlocal Analytics</div>
+  </div>
+  <nav>
+    <button class="nav-item active" onclick="scrollToSection('kpi')"><span class="icon">&#9632;</span> Overview</button>
+    <button class="nav-item" onclick="scrollToSection('revenue')"><span class="icon">&#9650;</span> Revenue Trend</button>
+    <button class="nav-item" onclick="scrollToSection('category')"><span class="icon">&#9673;</span> Categories</button>
+    <button class="nav-item" onclick="scrollToSection('merchants')"><span class="icon">&#9733;</span> Top Merchants</button>
+    <button class="nav-item" onclick="scrollToSection('city')"><span class="icon">&#9881;</span> City Analysis</button>
+    <div class="nav-sep"></div>
+    <button class="nav-item" onclick="scrollToSection('hourly')"><span class="icon">&#9200;</span> Hourly Pattern</button>
+    <button class="nav-item" onclick="scrollToSection('heatmap')"><span class="icon">&#9724;</span> Day-Hour Heatmap</button>
+    <button class="nav-item" onclick="scrollToSection('cohort')"><span class="icon">&#9638;</span> Cohort Retention</button>
+    <button class="nav-item" onclick="scrollToSection('funnel')"><span class="icon">&#9660;</span> Order Funnel</button>
+  </nav>
+  <div class="sidebar-footer">
+    Built by Aditya Lashkary<br>
+    Schema: users / merchants / orders<br>
+    Stack: Chart.js + Vanilla JS<br>
+    Data: 500+ simulated records
+  </div>
+</aside>
+
+<!-- Main Content -->
+<main class="main">
+
+<!-- Header -->
+<div class="header" id="kpi">
+  <h2>Dashboard <span>| Last 12 months</span></h2>
+  <div class="filters">
+    <select class="filter-select" id="filterCity" onchange="applyFilters()">
+      <option value="all">All Cities</option>
+    </select>
+    <select class="filter-select" id="filterCategory" onchange="applyFilters()">
+      <option value="all">All Categories</option>
+    </select>
+    <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+      <option value="all">All Status</option>
+      <option value="completed">Completed</option>
+      <option value="pending">Pending</option>
+      <option value="cancelled">Cancelled</option>
+      <option value="refunded">Refunded</option>
+    </select>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="label">Total GMV</div>
+    <div class="value" id="kpiGMV">--</div>
+    <div class="change up" id="kpiGMVChange">--</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Total Orders</div>
+    <div class="value" id="kpiOrders">--</div>
+    <div class="change up" id="kpiOrdersChange">--</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Active Users</div>
+    <div class="value" id="kpiUsers">--</div>
+    <div class="change up" id="kpiUsersChange">--</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Avg Order Value</div>
+    <div class="value" id="kpiAOV">--</div>
+    <div class="change up" id="kpiAOVChange">--</div>
+  </div>
+</div>
+
+<!-- Row 1: Revenue Trend + Category -->
+<div class="chart-row">
+  <div class="chart-box" id="revenue">
+    <div class="chart-header">
+      <h3>Monthly Revenue Trend <small>GMV + MoM Growth</small></h3>
+      <button class="sql-toggle" onclick="toggleSQL('sqlRevenue')">{ } View SQL</button>
+    </div>
+    <div class="chart-canvas"><canvas id="chartRevenue"></canvas></div>
+    <div class="sql-block" id="sqlRevenue"><pre><code><span class="kw">WITH</span> monthly <span class="kw">AS</span> (
+  <span class="kw">SELECT</span>
+    <span class="fn">DATE_TRUNC</span>(<span class="str">'month'</span>, o.order_date) <span class="kw">AS</span> month,
+    <span class="fn">SUM</span>(o.bill_amount)              <span class="kw">AS</span> gmv,
+    <span class="fn">COUNT</span>(*)                         <span class="kw">AS</span> order_count
+  <span class="kw">FROM</span> orders o
+  <span class="kw">JOIN</span> merchants m <span class="kw">ON</span> m.merchant_id = o.merchant_id
+  <span class="kw">WHERE</span> o.status = <span class="str">'completed'</span>
+  <span class="kw">GROUP BY</span> 1
+)
+<span class="kw">SELECT</span>
+  month,
+  gmv,
+  order_count,
+  <span class="fn">LAG</span>(gmv) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month)  <span class="kw">AS</span> prev_gmv,
+  <span class="fn">ROUND</span>(
+    (gmv - <span class="fn">LAG</span>(gmv) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month))
+    / <span class="fn">NULLIF</span>(<span class="fn">LAG</span>(gmv) <span class="kw">OVER</span> (<span class="kw">ORDER BY</span> month), 0)
+    * 100, 1
+  ) <span class="kw">AS</span> mom_growth_pct
+<span class="kw">FROM</span> monthly
+<span class="kw">ORDER BY</span> month;</code></pre></div>
+  </div>
+
+  <div class="chart-box" id="category">
+    <div class="chart-header">
+      <h3>Category Distribution <small>by GMV share</small></h3>
+      <button class="sql-toggle" onclick="toggleSQL('sqlCategory')">{ } View SQL</button>
+    </div>
+    <div class="chart-canvas"><canvas id="chartCategory"></canvas></div>
+    <div class="sql-block" id="sqlCategory"><pre><code><span class="kw">SELECT</span>
+  m.category,
+  <span class="fn">SUM</span>(o.bill_amount) <span class="kw">AS</span> total_gmv,
+  <span class="fn">ROUND</span>(
+    <span class="fn">SUM</span>(o.bill_amount) * 100.0
+    / <span class="fn">SUM</span>(<span class="fn">SUM</span>(o.bill_amount)) <span class="kw">OVER</span> (),
+    1
+  ) <span class="kw">AS</span> pct_share
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> merchants m <span class="kw">ON</span> m.merchant_id = o.merchant_id
+<span class="kw">WHERE</span> o.status = <span class="str">'completed'</span>
+<span class="kw">GROUP BY</span> m.category
+<span class="kw">ORDER BY</span> total_gmv <span class="kw">DESC</span>;</code></pre></div>
+  </div>
+</div>
+
+<!-- Row 2: Top Merchants Table -->
+<div class="chart-full">
+  <div class="chart-box" id="merchants">
+    <div class="chart-header">
+      <h3>Top 10 Merchants <small>by total revenue</small></h3>
+      <button class="sql-toggle" onclick="toggleSQL('sqlMerchants')">{ } View SQL</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table" id="merchantTable">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th onclick="sortTable(1)">Merchant</th>
+            <th onclick="sortTable(2)">Category</th>
+            <th onclick="sortTable(3)">City</th>
+            <th onclick="sortTable(4)">Orders</th>
+            <th onclick="sortTable(5)">Revenue</th>
+            <th onclick="sortTable(6)">Avg Order</th>
+            <th onclick="sortTable(7)">Rating</th>
+          </tr>
+        </thead>
+        <tbody id="merchantBody"></tbody>
+      </table>
+    </div>
+    <div class="sql-block" id="sqlMerchants"><pre><code><span class="kw">SELECT</span>
+  <span class="fn">RANK</span>() <span class="kw">OVER</span> (
+    <span class="kw">ORDER BY</span> <span class="fn">SUM</span>(o.bill_amount) <span class="kw">DESC</span>
+  ) <span class="kw">AS</span> rnk,
+  m.name,
+  m.category,
+  m.city,
+  <span class="fn">COUNT</span>(o.order_id)              <span class="kw">AS</span> total_orders,
+  <span class="fn">SUM</span>(o.bill_amount)              <span class="kw">AS</span> total_revenue,
+  <span class="fn">ROUND</span>(<span class="fn">AVG</span>(o.bill_amount), 0)     <span class="kw">AS</span> avg_order_value,
+  <span class="fn">ROUND</span>(<span class="fn">AVG</span>(m.rating), 1)          <span class="kw">AS</span> avg_rating
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> merchants m <span class="kw">ON</span> m.merchant_id = o.merchant_id
+<span class="kw">WHERE</span> o.status = <span class="str">'completed'</span>
+<span class="kw">GROUP BY</span> m.merchant_id, m.name, m.category, m.city
+<span class="kw">HAVING</span> <span class="fn">COUNT</span>(o.order_id) > 1
+<span class="kw">ORDER BY</span> total_revenue <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 10;</code></pre></div>
+  </div>
+</div>
+
+<!-- Row 3: City + Hourly -->
+<div class="chart-row">
+  <div class="chart-box" id="city">
+    <div class="chart-header">
+      <h3>City-wise GMV <small>completed orders</small></h3>
+      <button class="sql-toggle" onclick="toggleSQL('sqlCity')">{ } View SQL</button>
+    </div>
+    <div class="chart-canvas"><canvas id="chartCity"></canvas></div>
+    <div class="sql-block" id="sqlCity"><pre><code><span class="kw">SELECT</span>
+  u.city,
+  <span class="fn">COUNT</span>(o.order_id)            <span class="kw">AS</span> total_orders,
+  <span class="fn">SUM</span>(o.bill_amount)            <span class="kw">AS</span> total_gmv,
+  <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> o.user_id)    <span class="kw">AS</span> unique_users,
+  <span class="fn">ROUND</span>(<span class="fn">AVG</span>(o.bill_amount), 0)   <span class="kw">AS</span> avg_order_value
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> users u <span class="kw">ON</span> u.user_id = o.user_id
+<span class="kw">WHERE</span> o.status = <span class="str">'completed'</span>
+<span class="kw">GROUP BY</span> u.city
+<span class="kw">ORDER BY</span> total_gmv <span class="kw">DESC</span>;</code></pre></div>
+  </div>
+
+  <div class="chart-box" id="hourly">
+    <div class="chart-header">
+      <h3>Hourly Order Pattern <small>order volume by hour</small></h3>
+      <button class="sql-toggle" onclick="toggleSQL('sqlHourly')">{ } View SQL</button>
+    </div>
+    <div class="chart-canvas"><canvas id="chartHourly"></canvas></div>
+    <div class="sql-block" id="sqlHourly"><pre><code><span class="kw">SELECT</span>
+  <span class="fn">EXTRACT</span>(HOUR <span class="kw">FROM</span> o.order_date) <span class="kw">AS</span> hour_of_day,
+  <span class="fn">COUNT</span>(*)                          <span class="kw">AS</span> order_count,
+  <span class="fn">SUM</span>(o.bill_amount)                 <span class="kw">AS</span> hourly_gmv,
+  <span class="fn">ROUND</span>(<span class="fn">AVG</span>(o.bill_amount), 0)        <span class="kw">AS</span> avg_bill
+<span class="kw">FROM</span> orders o
+<span class="kw">WHERE</span> o.status = <span class="str">'completed'</span>
+<span class="kw">GROUP BY</span> 1
+<span class="kw">ORDER BY</span> 1;</code></pre></div>
+  </div>
+</div>
+
+<!-- Row 4: Day-Hour Heatmap -->
+<div class="chart-full">
+  <div class="chart-box" id="heatmap">
+    <div class="chart-header">
+      <h3>Day-Hour Heatmap <small>order density by day &amp; hour</small></h3>
+      <button class="sql-toggle" onclick="toggleSQL('sqlHeatmap')">{ } View SQL</button>
+    </div>
+    <div id="heatmapGrid" style="overflow-x:auto;"></div>
+    <div class="sql-block" id="sqlHeatmap"><pre><code><span class="kw">SELECT</span>
+  <span class="fn">FORMAT_DATE</span>(<span class="str">'%A'</span>, o.order_date)    <span class="kw">AS</span> day_name,
+  <span class="fn">EXTRACT</span>(DAYOFWEEK <span class="kw">FROM</span> o.order_date) <span class="kw">AS</span> dow,
+  <span class="fn">EXTRACT</span>(HOUR <span class="kw">FROM</span> o.order_date)      <span class="kw">AS</span> hour_of_day,
+  <span class="fn">COUNT</span>(*)                             <span class="kw">AS</span> order_count
+<span class="kw">FROM</span> orders o
+<span class="kw">WHERE</span> o.status = <span class="str">'completed'</span>
+<span class="kw">GROUP BY</span> 1, 2, 3
+<span class="kw">ORDER BY</span> dow, hour_of_day;
+
+<span class="comment">-- Pivot karna hoga application layer mein</span>
+<span class="comment">-- ya BigQuery mein PIVOT operator use karo</span></code></pre></div>
+  </div>
+</div>
+
+<!-- Row 5: Cohort + Funnel -->
+<div class="chart-row">
+  <div class="chart-box" id="cohort">
+    <div class="chart-header">
+      <h3>Customer Cohort Retention <small>monthly cohorts</small></h3>
+      <button class="sql-toggle" onclick="toggleSQL('sqlCohort')">{ } View SQL</button>
+    </div>
+    <div id="cohortGrid" style="overflow-x:auto;"></div>
+    <div class="sql-block" id="sqlCohort"><pre><code><span class="kw">WITH</span> first_order <span class="kw">AS</span> (
+  <span class="kw">SELECT</span>
+    user_id,
+    <span class="fn">DATE_TRUNC</span>(<span class="str">'month'</span>, <span class="fn">MIN</span>(order_date)) <span class="kw">AS</span> cohort_month
+  <span class="kw">FROM</span> orders
+  <span class="kw">WHERE</span> status = <span class="str">'completed'</span>
+  <span class="kw">GROUP BY</span> user_id
+),
+activity <span class="kw">AS</span> (
+  <span class="kw">SELECT</span>
+    f.cohort_month,
+    <span class="fn">DATE_DIFF</span>(
+      <span class="fn">DATE_TRUNC</span>(<span class="str">'month'</span>, o.order_date),
+      f.cohort_month,
+      MONTH
+    ) <span class="kw">AS</span> month_offset,
+    <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> o.user_id) <span class="kw">AS</span> active_users
+  <span class="kw">FROM</span> orders o
+  <span class="kw">JOIN</span> first_order f <span class="kw">ON</span> f.user_id = o.user_id
+  <span class="kw">WHERE</span> o.status = <span class="str">'completed'</span>
+  <span class="kw">GROUP BY</span> 1, 2
+),
+cohort_size <span class="kw">AS</span> (
+  <span class="kw">SELECT</span> cohort_month, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> total_users
+  <span class="kw">FROM</span> first_order
+  <span class="kw">GROUP BY</span> 1
+)
+<span class="kw">SELECT</span>
+  a.cohort_month,
+  a.month_offset,
+  a.active_users,
+  c.total_users,
+  <span class="fn">ROUND</span>(a.active_users * 100.0 / c.total_users, 1) <span class="kw">AS</span> retention_pct
+<span class="kw">FROM</span> activity a
+<span class="kw">JOIN</span> cohort_size c <span class="kw">ON</span> c.cohort_month = a.cohort_month
+<span class="kw">ORDER BY</span> a.cohort_month, a.month_offset;</code></pre></div>
+  </div>
+
+  <div class="chart-box" id="funnel">
+    <div class="chart-header">
+      <h3>Order Funnel <small>conversion stages</small></h3>
+      <button class="sql-toggle" onclick="toggleSQL('sqlFunnel')">{ } View SQL</button>
+    </div>
+    <div id="funnelViz"></div>
+    <div class="sql-block" id="sqlFunnel"><pre><code><span class="kw">SELECT</span>
+  <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> user_id)                         <span class="kw">AS</span> total_users,
+  <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> <span class="kw">CASE</span>
+    <span class="kw">WHEN</span> status <span class="kw">IN</span> (<span class="str">'completed'</span>,<span class="str">'pending'</span>,<span class="str">'cancelled'</span>,<span class="str">'refunded'</span>)
+    <span class="kw">THEN</span> user_id <span class="kw">END</span>)                               <span class="kw">AS</span> placed_order,
+  <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> <span class="kw">CASE</span>
+    <span class="kw">WHEN</span> status = <span class="str">'completed'</span>
+    <span class="kw">THEN</span> user_id <span class="kw">END</span>)                               <span class="kw">AS</span> completed_order,
+  <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> <span class="kw">CASE</span>
+    <span class="kw">WHEN</span> status = <span class="str">'completed'</span> <span class="kw">AND</span> cashback_amount > 0
+    <span class="kw">THEN</span> user_id <span class="kw">END</span>)                               <span class="kw">AS</span> earned_cashback,
+  <span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> <span class="kw">CASE</span>
+    <span class="kw">WHEN</span> user_id <span class="kw">IN</span> (
+      <span class="kw">SELECT</span> user_id <span class="kw">FROM</span> orders
+      <span class="kw">WHERE</span> status = <span class="str">'completed'</span>
+      <span class="kw">GROUP BY</span> user_id <span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) >= 2
+    )
+    <span class="kw">THEN</span> user_id <span class="kw">END</span>)                               <span class="kw">AS</span> repeat_customer
+<span class="kw">FROM</span> orders;</code></pre></div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// ============================================================
+// DATA GENERATION — realistic dummy data for a Magicpin-like platform
+// ============================================================
+const CITIES = ['Delhi','Mumbai','Bangalore','Hyderabad','Pune','Jaipur'];
+const CATEGORIES = ['Food','Shopping','Beauty','Services','Health'];
+const STATUSES = ['completed','completed','completed','completed','pending','cancelled','refunded'];
+const MERCHANT_NAMES = [
+  'Burger Singh','Pizza Port','Chai Point','Wow Momo','Barbeque Nation',
+  'Lenskart','Myntra Store','Nykaa Beauty','Urban Clap','Decathlon',
+  'Lakme Salon','Jawed Habib','VLCC','Dr. Batra','Apollo Pharmacy',
+  'Big Bazaar','Reliance Fresh','DMart Express','Croma','Haldirams',
+  'Dominos','KFC Express','Subway','CCD','Starbucks',
+  'Body Shop','Mamaearth Store','Sugar Cosmetics','Pepperfry','Urban Ladder'
+];
+const CAT_MAP = {
+  'Burger Singh':'Food','Pizza Port':'Food','Chai Point':'Food','Wow Momo':'Food','Barbeque Nation':'Food',
+  'Dominos':'Food','KFC Express':'Food','Subway':'Food','CCD':'Food','Starbucks':'Food','Haldirams':'Food',
+  'Lenskart':'Shopping','Myntra Store':'Shopping','Big Bazaar':'Shopping','Reliance Fresh':'Shopping',
+  'DMart Express':'Shopping','Croma':'Shopping','Pepperfry':'Shopping','Urban Ladder':'Shopping',
+  'Nykaa Beauty':'Beauty','Lakme Salon':'Beauty','Jawed Habib':'Beauty','Body Shop':'Beauty',
+  'Sugar Cosmetics':'Beauty','Mamaearth Store':'Beauty',
+  'Urban Clap':'Services','VLCC':'Services',
+  'Decathlon':'Health','Dr. Batra':'Health','Apollo Pharmacy':'Health'
+};
+
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+const rng = seededRandom(42);
+
+function generateData() {
+  const users = [];
+  for (let i = 1; i <= 200; i++) {
+    users.push({
+      user_id: i,
+      name: 'User_' + i,
+      city: CITIES[Math.floor(rng() * CITIES.length)],
+      signup_date: new Date(2025, Math.floor(rng() * 12), Math.floor(rng() * 28) + 1)
+    });
+  }
+
+  const merchants = MERCHANT_NAMES.map((name, i) => ({
+    merchant_id: i + 1,
+    name: name,
+    category: CAT_MAP[name],
+    city: CITIES[Math.floor(rng() * CITIES.length)],
+    rating: (3.2 + rng() * 1.8).toFixed(1)
+  }));
+
+  const orders = [];
+  const hourWeights = [1,0.5,0.3,0.2,0.2,0.3,0.5,1.5,2.5,3,2.5,3.5,5,4.5,3,3.5,4,4.5,5,6,5.5,4,3,2];
+  const dayWeights = [0.7,0.9,1.0,1.0,1.1,1.3,1.2];
+
+  for (let id = 1; id <= 520; id++) {
+    const user = users[Math.floor(rng() * users.length)];
+    const merchant = merchants[Math.floor(rng() * merchants.length)];
+    const month = Math.floor(rng() * 12);
+    const day = Math.floor(rng() * 28) + 1;
+
+    let hour = 0;
+    const hRoll = rng() * hourWeights.reduce((a,b)=>a+b,0);
+    let cumH = 0;
+    for (let h = 0; h < 24; h++) {
+      cumH += hourWeights[h];
+      if (hRoll <= cumH) { hour = h; break; }
+    }
+
+    const catMultiplier = {Food:1,Shopping:2.5,Beauty:1.8,Services:2,Health:1.5};
+    const baseAmount = 150 + rng() * 400 * (catMultiplier[merchant.category] || 1);
+    const billAmount = Math.round(baseAmount);
+    const status = STATUSES[Math.floor(rng() * STATUSES.length)];
+    const cashback = status === 'completed' ? Math.round(billAmount * (0.05 + rng() * 0.1)) : 0;
+
+    orders.push({
+      order_id: id,
+      user_id: user.user_id,
+      merchant_id: merchant.merchant_id,
+      order_date: new Date(2025, month, day, hour, Math.floor(rng()*60)),
+      bill_amount: billAmount,
+      cashback_amount: cashback,
+      status: status,
+      _user_city: user.city,
+      _merchant_category: merchant.category,
+      _merchant_name: merchant.name,
+      _merchant_city: merchant.city,
+      _merchant_rating: parseFloat(merchant.rating)
+    });
+  }
+
+  return { users, merchants, orders };
+}
+
+const DATA = generateData();
+let filteredOrders = [...DATA.orders];
+
+// ============================================================
+// FILTERS
+// ============================================================
+function populateFilters() {
+  const citySelect = document.getElementById('filterCity');
+  CITIES.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    citySelect.appendChild(opt);
+  });
+  const catSelect = document.getElementById('filterCategory');
+  CATEGORIES.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    catSelect.appendChild(opt);
+  });
+}
+
+function applyFilters() {
+  const city = document.getElementById('filterCity').value;
+  const cat = document.getElementById('filterCategory').value;
+  const status = document.getElementById('filterStatus').value;
+
+  filteredOrders = DATA.orders.filter(o => {
+    if (city !== 'all' && o._user_city !== city) return false;
+    if (cat !== 'all' && o._merchant_category !== cat) return false;
+    if (status !== 'all' && o.status !== status) return false;
+    return true;
+  });
+
+  renderAll();
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+function fmt(n) {
+  if (n >= 10000000) return (n/10000000).toFixed(2) + ' Cr';
+  if (n >= 100000) return (n/100000).toFixed(2) + ' L';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return n.toString();
+}
+function fmtINR(n) { return '₹' + fmt(n); }
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function toggleSQL(id) {
+  document.getElementById(id).classList.toggle('show');
+}
+
+function scrollToSection(id) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  event.target.closest('.nav-item').classList.add('active');
+}
+
+// ============================================================
+// CHART INSTANCES (for destroy/rebuild)
+// ============================================================
+let charts = {};
+
+function destroyChart(key) {
+  if (charts[key]) { charts[key].destroy(); delete charts[key]; }
+}
+
+// ============================================================
+// KPI CARDS
+// ============================================================
+function renderKPIs() {
+  const orders = filteredOrders;
+  const statusFilter = document.getElementById('filterStatus').value;
+  const totalGMV = orders.reduce((s,o) => s + o.bill_amount, 0);
+  const totalOrders = orders.length;
+  const uniqueUsers = new Set(orders.map(o => o.user_id)).size;
+  const aov = orders.length > 0 ? Math.round(totalGMV / orders.length) : 0;
+
+  const h1 = orders.filter(o => o.order_date.getMonth() >= 6);
+  const h2 = orders.filter(o => o.order_date.getMonth() < 6);
+  const gmvH1 = h1.reduce((s,o)=>s+o.bill_amount,0);
+  const gmvH2 = h2.reduce((s,o)=>s+o.bill_amount,0);
+  const gmvGrowth = gmvH2 > 0 ? ((gmvH1-gmvH2)/gmvH2*100).toFixed(1) : 0;
+
+  document.getElementById('kpiGMV').textContent = fmtINR(totalGMV);
+  document.getElementById('kpiGMVChange').textContent = (gmvGrowth >= 0 ? '↑ ' : '↓ ') + Math.abs(gmvGrowth) + '% vs prev half';
+  document.getElementById('kpiGMVChange').className = 'change ' + (gmvGrowth >= 0 ? 'up' : 'down');
+
+  document.getElementById('kpiOrders').textContent = fmt(totalOrders);
+  if (statusFilter === 'all') {
+    const completedCount = orders.filter(o => o.status === 'completed').length;
+    const compRate = totalOrders > 0 ? (completedCount/totalOrders*100).toFixed(1) : 0;
+    document.getElementById('kpiOrdersChange').textContent = compRate + '% completion rate';
+    document.getElementById('kpiOrdersChange').className = 'change ' + (compRate >= 70 ? 'up' : 'down');
+  } else {
+    document.getElementById('kpiOrdersChange').textContent = statusFilter + ' orders';
+    document.getElementById('kpiOrdersChange').className = 'change up';
+  }
+
+  document.getElementById('kpiUsers').textContent = fmt(uniqueUsers);
+  document.getElementById('kpiUsersChange').textContent = 'unique ordering users';
+  document.getElementById('kpiUsersChange').className = 'change up';
+
+  document.getElementById('kpiAOV').textContent = fmtINR(aov);
+  document.getElementById('kpiAOVChange').textContent = 'per order (avg)';
+  document.getElementById('kpiAOVChange').className = 'change up';
+}
+
+// ============================================================
+// CHART 1: Revenue Trend
+// ============================================================
+function renderRevenue() {
+  destroyChart('revenue');
+  const orders = filteredOrders;
+  const monthly = {};
+  for (let m = 0; m < 12; m++) monthly[m] = { gmv: 0, count: 0 };
+  orders.forEach(o => {
+    const m = o.order_date.getMonth();
+    monthly[m].gmv += o.bill_amount;
+    monthly[m].count++;
+  });
+
+  const labels = MONTHS;
+  const gmvData = labels.map((_, i) => monthly[i].gmv);
+  const momData = gmvData.map((v, i) => i === 0 ? 0 : (gmvData[i-1] > 0 ? ((v - gmvData[i-1]) / gmvData[i-1] * 100).toFixed(1) : 0));
+
+  const ctx = document.getElementById('chartRevenue').getContext('2d');
+  charts.revenue = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'GMV (₹)',
+          data: gmvData,
+          backgroundColor: 'rgba(59,130,246,0.3)',
+          borderColor: '#3b82f6',
+          borderWidth: 1.5,
+          borderRadius: 4,
+          order: 2
+        },
+        {
+          label: 'MoM Growth %',
+          data: momData,
+          type: 'line',
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34,197,94,0.1)',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#22c55e',
+          tension: 0.3,
+          yAxisID: 'y1',
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { position: 'top', labels: { color: '#94a3b8', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          titleColor: '#e2e8f0',
+          bodyColor: '#94a3b8',
+          borderColor: '#334155',
+          borderWidth: 1
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(30,42,62,0.5)' }, ticks: { color: '#64748b', font: { size: 11 } } },
+        y: {
+          grid: { color: 'rgba(30,42,62,0.5)' },
+          ticks: { color: '#64748b', font: { size: 11 }, callback: v => fmtINR(v) }
+        },
+        y1: {
+          position: 'right',
+          grid: { display: false },
+          ticks: { color: '#22c55e', font: { size: 11 }, callback: v => v + '%' }
+        }
+      }
+    }
+  });
+}
+
+// ============================================================
+// CHART 2: Category Distribution
+// ============================================================
+function renderCategory() {
+  destroyChart('category');
+  const orders = filteredOrders;
+  const catData = {};
+  CATEGORIES.forEach(c => catData[c] = 0);
+  orders.forEach(o => { catData[o._merchant_category] = (catData[o._merchant_category] || 0) + o.bill_amount; });
+
+  const colors = ['#3b82f6','#22c55e','#f59e0b','#a855f7','#14b8a6'];
+  const bgColors = colors.map(c => c + '33');
+
+  const ctx = document.getElementById('chartCategory').getContext('2d');
+  charts.category = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: CATEGORIES,
+      datasets: [{
+        data: CATEGORIES.map(c => catData[c]),
+        backgroundColor: colors,
+        borderColor: '#0a0d14',
+        borderWidth: 2,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#94a3b8', font: { size: 11 }, padding: 12, usePointStyle: true, pointStyleWidth: 10 }
+        },
+        tooltip: {
+          backgroundColor: '#1e293b', titleColor: '#e2e8f0', bodyColor: '#94a3b8',
+          borderColor: '#334155', borderWidth: 1,
+          callbacks: { label: ctx => ' ' + ctx.label + ': ' + fmtINR(ctx.parsed) }
+        }
+      }
+    }
+  });
+}
+
+// ============================================================
+// CHART 3: Top Merchants Table
+// ============================================================
+function renderMerchants() {
+  const orders = filteredOrders;
+  const mData = {};
+  orders.forEach(o => {
+    if (!mData[o.merchant_id]) {
+      mData[o.merchant_id] = {
+        name: o._merchant_name, category: o._merchant_category, city: o._merchant_city,
+        orders: 0, revenue: 0, rating: o._merchant_rating
+      };
+    }
+    mData[o.merchant_id].orders++;
+    mData[o.merchant_id].revenue += o.bill_amount;
+  });
+
+  const sorted = Object.values(mData).sort((a,b) => b.revenue - a.revenue).slice(0, 10);
+  const tbody = document.getElementById('merchantBody');
+  tbody.innerHTML = '';
+
+  sorted.forEach((m, i) => {
+    const rank = i + 1;
+    const rankClass = rank <= 3 ? 'rank-' + rank : 'rank-other';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="rank-badge ${rankClass}">${rank}</span></td>
+      <td class="hl">${m.name}</td>
+      <td>${m.category}</td>
+      <td>${m.city}</td>
+      <td>${m.orders}</td>
+      <td class="hl">${fmtINR(m.revenue)}</td>
+      <td>${fmtINR(Math.round(m.revenue / m.orders))}</td>
+      <td>${m.rating}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+let sortDir = 1;
+function sortTable(col) {
+  const tbody = document.getElementById('merchantBody');
+  const rows = Array.from(tbody.rows);
+  sortDir *= -1;
+  rows.sort((a,b) => {
+    let aVal = a.cells[col].textContent.replace(/[^\d.-]/g,'');
+    let bVal = b.cells[col].textContent.replace(/[^\d.-]/g,'');
+    if (!isNaN(aVal) && !isNaN(bVal)) return (parseFloat(aVal) - parseFloat(bVal)) * sortDir;
+    return a.cells[col].textContent.localeCompare(b.cells[col].textContent) * sortDir;
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+
+// ============================================================
+// CHART 4: City-wise GMV
+// ============================================================
+function renderCity() {
+  destroyChart('city');
+  const orders = filteredOrders;
+  const cityData = {};
+  CITIES.forEach(c => cityData[c] = 0);
+  orders.forEach(o => { cityData[o._user_city] += o.bill_amount; });
+
+  const sorted = CITIES.sort((a,b) => cityData[b] - cityData[a]);
+  const colors = ['#3b82f6','#60a5fa','#93c5fd','#bfdbfe','#dbeafe','#eff6ff'];
+
+  const ctx = document.getElementById('chartCity').getContext('2d');
+  charts.city = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted,
+      datasets: [{
+        data: sorted.map(c => cityData[c]),
+        backgroundColor: colors,
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e293b', titleColor: '#e2e8f0', bodyColor: '#94a3b8',
+          borderColor: '#334155', borderWidth: 1,
+          callbacks: { label: ctx => ' GMV: ' + fmtINR(ctx.parsed.x) }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(30,42,62,0.5)' }, ticks: { color: '#64748b', font: { size: 11 }, callback: v => fmtINR(v) } },
+        y: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 12, weight: 600 } } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// CHART 5: Hourly Pattern
+// ============================================================
+function renderHourly() {
+  destroyChart('hourly');
+  const orders = filteredOrders;
+  const hourData = Array(24).fill(0);
+  orders.forEach(o => { hourData[o.order_date.getHours()]++; });
+
+  const labels = Array.from({length:24}, (_, i) => i.toString().padStart(2,'0') + ':00');
+
+  const ctx = document.getElementById('chartHourly').getContext('2d');
+  charts.hourly = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Orders',
+        data: hourData,
+        fill: true,
+        backgroundColor: 'rgba(168,85,247,0.15)',
+        borderColor: '#a855f7',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: '#a855f7',
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#1e293b', titleColor: '#e2e8f0', bodyColor: '#94a3b8', borderColor: '#334155', borderWidth: 1 }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(30,42,62,0.3)' }, ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+        y: { grid: { color: 'rgba(30,42,62,0.5)' }, ticks: { color: '#64748b', font: { size: 11 } }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ============================================================
+// CHART 6: Day-Hour Heatmap
+// ============================================================
+function renderHeatmap() {
+  const orders = filteredOrders;
+  const grid = {};
+  DAYS.forEach(d => { grid[d] = Array(24).fill(0); });
+  orders.forEach(o => {
+    const day = DAYS[o.order_date.getDay()];
+    const hour = o.order_date.getHours();
+    grid[day][hour]++;
+  });
+
+  let maxVal = 0;
+  DAYS.forEach(d => grid[d].forEach(v => { if (v > maxVal) maxVal = v; }));
+
+  const container = document.getElementById('heatmapGrid');
+  let html = '<div class="heatmap-grid">';
+  html += '<div class="heatmap-label"></div>';
+  for (let h = 0; h < 24; h++) {
+    html += `<div class="heatmap-cell" style="color:var(--text3);font-size:9px;">${h}</div>`;
+  }
+  DAYS.forEach(day => {
+    html += `<div class="heatmap-label">${day}</div>`;
+    grid[day].forEach(val => {
+      const intensity = maxVal > 0 ? val / maxVal : 0;
+      const r = Math.round(59 + intensity * 0);
+      const g = Math.round(130 - intensity * 70);
+      const b = Math.round(246 - intensity * 100);
+      const bg = `rgba(59,130,246,${(intensity * 0.7 + 0.05).toFixed(2)})`;
+      const color = intensity > 0.5 ? '#fff' : 'var(--text3)';
+      html += `<div class="heatmap-cell" style="background:${bg};color:${color};" title="${day} ${val} orders">${val || ''}</div>`;
+    });
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// ============================================================
+// CHART 7: Cohort Retention
+// ============================================================
+function renderCohort() {
+  const orders = filteredOrders;
+
+  const firstOrder = {};
+  orders.forEach(o => {
+    const m = o.order_date.getMonth();
+    if (firstOrder[o.user_id] === undefined || m < firstOrder[o.user_id]) {
+      firstOrder[o.user_id] = m;
+    }
+  });
+
+  const cohorts = {};
+  for (let m = 0; m < 12; m++) cohorts[m] = { size: 0, retained: {} };
+
+  Object.entries(firstOrder).forEach(([uid, cohortMonth]) => {
+    cohorts[cohortMonth].size++;
+  });
+
+  orders.forEach(o => {
+    const cohortMonth = firstOrder[o.user_id];
+    const offset = o.order_date.getMonth() - cohortMonth;
+    if (offset >= 0) {
+      if (!cohorts[cohortMonth].retained[offset]) cohorts[cohortMonth].retained[offset] = new Set();
+      cohorts[cohortMonth].retained[offset].add(o.user_id);
+    }
+  });
+
+  const maxOffset = 6;
+  const container = document.getElementById('cohortGrid');
+  const cols = maxOffset + 2;
+
+  let html = `<div class="cohort-grid" style="grid-template-columns: 70px repeat(${maxOffset + 1}, 1fr);">`;
+  html += '<div class="cohort-cell cohort-header">Cohort</div>';
+  for (let i = 0; i <= maxOffset; i++) {
+    html += `<div class="cohort-cell cohort-header">M+${i}</div>`;
+  }
+
+  for (let m = 0; m < 8; m++) {
+    if (cohorts[m].size === 0) continue;
+    html += `<div class="cohort-cell cohort-header">${MONTHS[m]}</div>`;
+    for (let off = 0; off <= maxOffset; off++) {
+      if (m + off > 11) {
+        html += '<div class="cohort-cell" style="background:var(--bg);">-</div>';
+        continue;
+      }
+      const retained = cohorts[m].retained[off] ? cohorts[m].retained[off].size : 0;
+      const pct = cohorts[m].size > 0 ? (retained / cohorts[m].size * 100) : 0;
+      const intensity = pct / 100;
+      const bg = off === 0
+        ? 'rgba(59,130,246,0.5)'
+        : `rgba(34,197,94,${(intensity * 0.6 + 0.05).toFixed(2)})`;
+      const color = intensity > 0.3 || off === 0 ? '#fff' : 'var(--text3)';
+      const display = off === 0 ? cohorts[m].size : pct.toFixed(0) + '%';
+      html += `<div class="cohort-cell" style="background:${bg};color:${color};" title="${MONTHS[m]} cohort, M+${off}: ${retained} users (${pct.toFixed(1)}%)">${display}</div>`;
+    }
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// ============================================================
+// CHART 8: Funnel
+// ============================================================
+function renderFunnel() {
+  const allUsers = new Set(DATA.users.map(u => u.user_id)).size;
+  const orderedUsers = new Set(filteredOrders.map(o => o.user_id)).size;
+  const completedUsers = new Set(filteredOrders.filter(o => o.status === 'completed').map(o => o.user_id)).size;
+  const cashbackUsers = new Set(filteredOrders.filter(o => o.status === 'completed' && o.cashback_amount > 0).map(o => o.user_id)).size;
+
+  const repeatMap = {};
+  filteredOrders.filter(o => o.status === 'completed').forEach(o => {
+    repeatMap[o.user_id] = (repeatMap[o.user_id] || 0) + 1;
+  });
+  const repeatUsers = Object.values(repeatMap).filter(c => c >= 2).length;
+
+  const steps = [
+    { label: 'Registered Users', value: allUsers, color: '#3b82f6', bg: 'rgba(59,130,246,0.15)' },
+    { label: 'Placed an Order', value: orderedUsers, color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)' },
+    { label: 'Completed Order', value: completedUsers, color: '#22c55e', bg: 'rgba(34,197,94,0.15)' },
+    { label: 'Earned Cashback', value: cashbackUsers, color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
+    { label: 'Repeat Customer', value: repeatUsers, color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
+  ];
+
+  const container = document.getElementById('funnelViz');
+  let html = '<div class="funnel">';
+  steps.forEach((step, i) => {
+    const widthPct = steps[0].value > 0 ? (step.value / steps[0].value * 60 + 40) : 100;
+    const convPct = i === 0 ? '100%' : (steps[0].value > 0 ? (step.value / steps[0].value * 100).toFixed(1) + '%' : '0%');
+    const dropFromPrev = i > 0 && steps[i-1].value > 0
+      ? ((1 - step.value / steps[i-1].value) * 100).toFixed(1)
+      : '';
+    html += `
+      <div class="funnel-step" style="width:${widthPct}%;background:${step.bg};border:1px solid ${step.color}30;">
+        <div class="f-left">
+          <span class="f-label">${step.label}</span>
+        </div>
+        <span class="f-val" style="color:${step.color};">${fmt(step.value)}</span>
+        <div class="f-right">
+          <span class="f-pct" style="color:var(--text2);">${convPct} of total</span>
+          ${dropFromPrev ? '<span class="f-drop">↓ ' + dropFromPrev + '% drop</span>' : ''}
+        </div>
+      </div>
+    `;
+    if (i < steps.length - 1) html += '<div class="funnel-connector"></div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// ============================================================
+// RENDER ALL
+// ============================================================
+function renderAll() {
+  renderKPIs();
+  renderRevenue();
+  renderCategory();
+  renderMerchants();
+  renderCity();
+  renderHourly();
+  renderHeatmap();
+  renderCohort();
+  renderFunnel();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+populateFilters();
+renderAll();
+</script>
+</body>
+</html>
